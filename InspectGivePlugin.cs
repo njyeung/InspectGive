@@ -27,6 +27,7 @@ public sealed class InspectGivePlugin : BasePlugin, IPluginConfig<InspectGiveCon
 
     private const int StepDelayMs = 100;
     private const int MaxChatMessageLength = 127;
+    private const string DefaultKnifeClassName = "weapon_knife";
 
     public void OnConfigParsed(InspectGiveConfig config)
     {
@@ -193,7 +194,7 @@ public sealed class InspectGivePlugin : BasePlugin, IPluginConfig<InspectGiveCon
         if (p is not { IsValid: true } || p.SteamID != steamId)
             return;
 
-        // Hand the weapon over for free.
+        // Hand the weapon over for free, or restore a missing knife for knife inspects.
         if (TryGiveWeapon(p, item))
             p.PrintToChat(" \x04[InspectGive]\x01 Skin applied and weapon given! Enjoy.");
         else
@@ -202,17 +203,25 @@ public sealed class InspectGivePlugin : BasePlugin, IPluginConfig<InspectGiveCon
 
     /// <summary>Gives the player the weapon matching the inspect's def index. Returns
     /// false (and gives nothing) if the player is dead or the def index isn't a known
-    /// buyable gun — the skin is still applied to their loadout either way.
+    /// giveable item — the skin is still applied to their loadout either way.
     ///
-    /// Knives and gloves are deliberately not handed over: the player always already has
-    /// a knife (and gloves aren't a weapon entity), so WeaponPaints' wp_refresh swaps
-    /// those models in place. Giving a knife entity here would just duplicate it.</summary>
+    /// Knives are only handed over when the player is missing one. Inspect links write
+    /// the selected knife into WeaponPaints first, then this gives a default knife entity
+    /// for WeaponPaints to skin. Gloves aren't weapon entities, so they are never given.</summary>
     private bool TryGiveWeapon(CCSPlayerController player, InspectItem item)
     {
-        if (KnifeNames.IsKnife(item.DefIndex) || GloveNames.IsGlove(item.DefIndex))
+        if (GloveNames.IsGlove(item.DefIndex))
             return false;
 
         var weaponName = WeaponNames.TryGet(item.DefIndex);
+        if (weaponName is null && KnifeNames.IsKnife(item.DefIndex))
+        {
+            if (PlayerHasKnife(player))
+                return false;
+
+            weaponName = DefaultKnifeClassName;
+        }
+
         if (weaponName is null)
             return false;
 
@@ -227,5 +236,28 @@ public sealed class InspectGivePlugin : BasePlugin, IPluginConfig<InspectGiveCon
         new CCSPlayer_ItemServices(pawn.ItemServices.Handle).GiveNamedItem<CBasePlayerWeapon>(weaponName);
         Logger.LogInformation("Gave {weapon} (def {def}) to {steamId}", weaponName, item.DefIndex, player.SteamID);
         return true;
+    }
+
+    private static bool PlayerHasKnife(CCSPlayerController player)
+    {
+        var pawn = player.PlayerPawn.Value;
+        var weapons = pawn?.WeaponServices?.MyWeapons;
+        if (pawn is null || !pawn.IsValid || weapons is null)
+            return false;
+
+        foreach (var weapon in weapons)
+        {
+            if (!weapon.IsValid)
+                continue;
+
+            var value = weapon.Value;
+            if (value is null || !value.IsValid)
+                continue;
+
+            if (value.DesignerName.Contains("knife") || value.DesignerName.Contains("bayonet"))
+                return true;
+        }
+
+        return false;
     }
 }
