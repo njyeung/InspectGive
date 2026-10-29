@@ -8,7 +8,7 @@
     <AssemblyName>InspectGive</AssemblyName>
     <RootNamespace>InspectGive</RootNamespace>
     <EnableDynamicLoading>true</EnableDynamicLoading>
-    <CssApiVersion Condition="'$(CssApiVersion)' == ''">1.0.369</CssApiVersion>
+    <CssApiVersion Condition="'$(CssApiVersion)' == ''">1.0.378</CssApiVersion>
   </PropertyGroup>
 
   <ItemGroup>

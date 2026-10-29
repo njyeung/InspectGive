@@ -15,7 +15,7 @@ namespace InspectGive;
 /// off-thread → back on the main thread fire WeaponPaints' server-console
 /// <c>wp_refresh &lt;steamid&gt;</c> to re-apply.
 /// </summary>
-public sealed class InspectGivePlugin : BasePlugin, IPluginConfig<InspectGiveConfig>
+public sealed partial class InspectGivePlugin : BasePlugin, IPluginConfig<InspectGiveConfig>
 {
     public override string ModuleName => "InspectGive";
     public override string ModuleVersion => "0.3.0";
@@ -44,6 +44,8 @@ public sealed class InspectGivePlugin : BasePlugin, IPluginConfig<InspectGiveCon
         // Console command (`~`): the reliable path for full-length blobs, since the
         // console accepts ~512 chars where chat caps far shorter.
         AddCommand(Config.Command, "Apply a skin from a CS2 inspect blob", OnInspectCommand);
+
+        LoadLarPreview();
     }
 
     private HookResult OnSayInspect(CCSPlayerController? player, CommandInfo info)
