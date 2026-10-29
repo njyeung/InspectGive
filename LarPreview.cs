@@ -17,7 +17,7 @@ namespace InspectGive;
 public sealed partial class InspectGivePlugin
 {
     private const string LarModel = "weapons/models/lar/weapon_rif_lar.vmdl";
-    private const string LarDefaultHost = "weapon_ak47";
+    private const string LarDefaultHost = "weapon_ssg08";
 
     /// <summary>Precache only runs on map load — after a hot-load, change map before
     /// using !lar or SetModel has nothing to point at.</summary>
